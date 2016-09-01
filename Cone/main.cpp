@@ -4,6 +4,7 @@
 #define DEBUG
 
 using namespace std;
+
 const double DEGREES_IN_CIRCLE = 360.0;
 const double DEGREES_TO_RADIANS = M_PI/180;
 
@@ -77,7 +78,8 @@ float* generateCone(float baseRadius, float height, float topRadius, int numberO
     return &verticies[0];
 }
 
-int main() {
+
+int main2() {
     float baseRadius = 3.0f;
     float height = 1.0f;
     float topRadius = 0.0f;
