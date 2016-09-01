@@ -5,6 +5,7 @@
 #include "vgl.h"
 #include "vmath.h"
 #include "LoadShaders.h"
+//#define DEBUG
 using namespace std;
 
 
@@ -46,8 +47,7 @@ double sine(double degrees) {
 }
 
 float* generateCone(float baseRadius, float height, float topRadius, int numberOfSteps, int& numberOfValues) {
-	// TODO
-	vector<float> verticies;
+	float* vertices = new float[numberOfSteps * 9];
 
 	// We'll go around the base of the cone. Take 360 degrees divided by the # of steps to find how many degrees we
 	//    should move for each step.
@@ -56,45 +56,43 @@ float* generateCone(float baseRadius, float height, float topRadius, int numberO
 	// Take a cross-section of each step. This way we can get the top vertex and lower vertex.
 	double currentNumberOfDegreesTraversed = 0.0f;
 
-	const float BASE_VERTEX_Z = 0.0f;
-	const float TOP_VERTEX_Z = height;
+	const float BASE_VERTEX_Y = 0.0f;
+	const float TOP_VERTEX_Y = height;
 
 	while (currentNumberOfDegreesTraversed < DEGREES_IN_CIRCLE) {
-		//TODO Calculate!
-
 		// Looking at the cone from the top down, the base is a circle. Using basic trig, we can find the needed points
 		float baseVertexX = (float) (baseRadius * cosine(currentNumberOfDegreesTraversed));
-		float baseVertexY = (float) (baseRadius * sine(currentNumberOfDegreesTraversed));
+		float baseVertexZ = (float) (baseRadius * sine(currentNumberOfDegreesTraversed));
 
 		float topVertexX = (float) (topRadius * cosine(currentNumberOfDegreesTraversed));
-		float topVertexY = (float) (topRadius * sine(currentNumberOfDegreesTraversed));
+		float topVertexZ = (float) (topRadius * sine(currentNumberOfDegreesTraversed));
 
 		// The third vertex is the base vertex of the next cross-section
 		float nextBaseVertexX = (float) (baseRadius * cosine(currentNumberOfDegreesTraversed + degreesPerStep));
-		float nextBaseVertexY = (float) (baseRadius * sine(currentNumberOfDegreesTraversed + degreesPerStep));
+		float nextBaseVertexZ = (float) (baseRadius * sine(currentNumberOfDegreesTraversed + degreesPerStep));
 
-		verticies.push_back(topVertexX);
-		verticies.push_back(topVertexY);
-		verticies.push_back(TOP_VERTEX_Z);
-		verticies.push_back(baseVertexX);
-		verticies.push_back(baseVertexY);
-		verticies.push_back(BASE_VERTEX_Z);
-		verticies.push_back(nextBaseVertexX);
-		verticies.push_back(nextBaseVertexY);
-		verticies.push_back(BASE_VERTEX_Z);
+		vertices[numberOfValues++] = topVertexX;
+		vertices[numberOfValues++] = TOP_VERTEX_Y;
+		vertices[numberOfValues++] = topVertexZ;
+		vertices[numberOfValues++] = baseVertexX;
+		vertices[numberOfValues++] = BASE_VERTEX_Y;
+		vertices[numberOfValues++] = baseVertexZ;
+		vertices[numberOfValues++] = nextBaseVertexX;
+		vertices[numberOfValues++] = BASE_VERTEX_Y;
+		vertices[numberOfValues++] = nextBaseVertexZ;
 
 #ifdef DEBUG
 		cout << "Vertex at " << currentNumberOfDegreesTraversed << " degrees\n";
         cout << "---------------------------------------------\n";
         cout << "Top vertex X: " << topVertexX << endl;
-        cout << "Top vertex Y: " << topVertexY << endl;
-        cout << "Top vertex Z: " << TOP_VERTEX_Z << endl;
+        cout << "Top vertex Y: " << TOP_VERTEX_Y << endl;
+        cout << "Top vertex Z: " << topVertexZ << endl;
         cout << "Base vertex X: " << baseVertexX << endl;
-        cout << "Base vertex Y: " << baseVertexY << endl;
-        cout << "Base vertex Z: " << BASE_VERTEX_Z << endl;
+        cout << "Base vertex Y: " << BASE_VERTEX_Y << endl;
+        cout << "Base vertex Z: " << baseVertexZ << endl;
         cout << "Next base vertex X: " << nextBaseVertexX << endl;
-        cout << "Next base vertex Y: " << nextBaseVertexY << endl;
-        cout << "Next base vertex Z: " << BASE_VERTEX_Z << endl;
+        cout << "Next base vertex Y: " << BASE_VERTEX_Y << endl;
+        cout << "Next base vertex Z: " << nextBaseVertexZ << endl;
         cout << endl;
 
 #endif
@@ -104,7 +102,7 @@ float* generateCone(float baseRadius, float height, float topRadius, int numberO
 
 
 
-	return &verticies[0];
+	return vertices;
 }
 
 GLuint vertexBuffers[10], arrayBuffers[10], elementBuffers[10];
