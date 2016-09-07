@@ -106,10 +106,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Cone.cpp" />
     <ClCompile Include="LoadShaders.cpp" />
     <ClCompile Include="test_code.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cone.h" />
     <ClInclude Include="LoadShaders.h" />
     <ClInclude Include="vgl.h" />
     <ClInclude Include="vmath.h" />
