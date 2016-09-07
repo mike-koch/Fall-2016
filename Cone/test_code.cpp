@@ -59,7 +59,7 @@ float* generateCone(float baseRadius, float height, float topRadius, int numberO
 	const float BASE_VERTEX_Y = 0.0f;
 	const float TOP_VERTEX_Y = height;
 
-	while (currentNumberOfDegreesTraversed < DEGREES_IN_CIRCLE) {
+	while (roundf(currentNumberOfDegreesTraversed) < DEGREES_IN_CIRCLE) {
 		// Looking at the cone from the top down, the base is a circle. Using basic trig, we can find the needed points
 		float baseVertexX = (float) (baseRadius * cosine(currentNumberOfDegreesTraversed));
 		float baseVertexZ = (float) (baseRadius * sine(currentNumberOfDegreesTraversed));
@@ -148,7 +148,7 @@ void init() {
 	 *        of elements in the array.
 	 */
 	int nbrOfElements = 0;
-	float * vertices = generateCone(0.5, 0.7, 0.0, 10, nbrOfElements);
+	float * vertices = generateCone(0.5, 0.7, 0.0, 25, nbrOfElements);
   
 	/*
 	* I'm using wide lines so that they are easier to see on the screen.
