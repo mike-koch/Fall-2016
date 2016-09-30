@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{47ECBC2F-8B99-4B3A-B2F1-BE921F45D426}</ProjectGuid>
+    <ProjectGuid>{D2781904-9276-412C-9F72-6DD49A0F6978}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,11 +74,13 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\Sandbox\School Projects\Fall-2016\Crowd Scene\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>C:\Sandbox\School Projects\Fall-2016\Crowd Scene\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -98,21 +100,21 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Sandbox\School Projects\Fall-2016\Cone\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Sandbox\School Projects\Fall-2016\Crowd Scene\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Sandbox\School Projects\Fall-2016\Cone\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Sandbox\School Projects\Fall-2016\Crowd Scene\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Cone.cpp" />
+    <ClCompile Include="CrowdScene.cpp" />
     <ClCompile Include="LoadShaders.cpp" />
-    <ClCompile Include="test_code.cpp" />
+    <ClCompile Include="OBJReader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Cone.h" />
     <ClInclude Include="LoadShaders.h" />
+    <ClInclude Include="OBJReader.h" />
     <ClInclude Include="vgl.h" />
     <ClInclude Include="vmath.h" />
   </ItemGroup>
