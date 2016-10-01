@@ -11,6 +11,7 @@
 #include "vmath.h"
 #include "LoadShaders.h"
 #include "OBJReader.h"
+#include "Material.h"
 
 // Some global variables, taken from IcosahedronExample
 #define BUFFER_OFFSET(x)  ((const void*) (x))
@@ -55,7 +56,6 @@ void timer(int value) {
 		currentRowBeingMoved = currentRowBeingMoved - 1 == -1 
 			? 7 
 			: currentRowBeingMoved - 1;
-		cout << "Row " << currentRowBeingMoved << " of cows is moving " << endl;
 	}
 
 	// Keyboard check. If the user is holding an arrow key, rotate negative for left / positive for right. Need to use SpecialFunc instead of KeyboardFunc since I'm looking for arrow keys
@@ -144,7 +144,7 @@ void display() {
 	vmath::mat4 normalTrans;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	vmath::mat4 currentMatrix = vmath::scale(0.08f) *
+	vmath::mat4 currentMatrix = vmath::scale(0.07f) *
 		vmath::rotate(rotationAngle, 0.0f, 1.0f, 0.0f);
 
 	for (int i = 0; i < 3; i++) {
@@ -166,6 +166,7 @@ void display() {
 	float rowBaseline = -13.0f;
 	float rowOffsetZ = 0.0f;
 	int row = 0;
+	int materialType = 0;
 	for (int i = 0; i < TOTAL_NUMBER_OF_ROWS_OF_COWS * 8; i++) {
 		if (i > 0 && i % 8 == 0) {
 			//-- We're going to be moving back and switching to the other offset position.
@@ -176,35 +177,19 @@ void display() {
 		GLfloat yPosition = -14.00f + (float)(4 * row);
 		GLfloat zPosition = 15.0f - (float)rowOffsetZ;
 
-
-		// Materials: Pearl
-		GLfloat ambient[] = { 0.25f, 0.20725f, 0.20725f };
-		GLfloat diffuse[] = { 1.0f, 0.829f, 0.829f };
-		GLfloat specular[] = { 0.296648f, 0.296648f, 0.296648f };
-		GLfloat shininess = (128.0f*0.088f);
+		Material *material = new Material();
+		getMaterialForType(materialType, material);
+		materialType = (materialType + 1) % 4;
 
 		if (currentRowBeingMoved == row) {
 			// Z Position should now be  3.0f * (numberOfFrames/60)
 			zPosition = 15.0f - (rowOffsetZ - 3.0f * ((float)numberOfFrames / NUMBER_OF_FRAMES_TO_PEAK));
-			ambient[0] = ambient[1] = ambient[2] = 0.25f;
-			diffuse[0] = diffuse[1] = diffuse[2] = 0.4f;
-			specular[0] = specular[1] = specular[2] = 0.774597f;
-			shininess = (128.0f*0.06f);
+			getMaterialForType(MaterialType::EMERALD, material);
 		}
 		else if (previousRow == row) {
 			// Move the row back to their original spot by preforming the reverse of the if block above.
 			zPosition = 15.0f - (rowOffsetZ - 3.0f * ((float)(NUMBER_OF_FRAMES_TO_PEAK - numberOfFrames) / NUMBER_OF_FRAMES_TO_PEAK));
-
-			ambient[0] = 0.1f;
-			ambient[1] = 0.18725f;
-			ambient[2] = 0.1745f;
-			diffuse[0] = 0.396f;
-			diffuse[1] = 0.74151f;
-			diffuse[2] = 0.69102f;
-			specular[0] = 0.297254f;
-			specular[1] = 0.30829f;
-			specular[2] = 0.306678f;
-			shininess = 128.0f*0.1f;
+			getMaterialForType(MaterialType::JADE, material);
 		}
 
 		GLfloat xPosition = rowBaseline + (float)(4 * (i % 8));
@@ -214,20 +199,22 @@ void display() {
 			vmath::vec4(0.0f, 1.0f, 0.0f, zPosition), // last value affects the cow's Z position
 			vmath::vec4(0.0f, 0.0f, 1.0f, xPosition), // last value affects the cow's X position
 			vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		currentMatrix = translation * vmath::scale(0.05f) * vmath::rotate(rotationAngle, 0.0f, 1.0f, 0.0f);
+		currentMatrix = translation * vmath::scale(0.04f) * vmath::rotate(rotationAngle, 0.0f, 1.0f, 0.0f);
 
 		glUniformMatrix4fv(transformLocation, 1, GL_TRUE, currentMatrix);
 		glUniform4fv(colorLocation, 1, red);
 
 
-		glUniform3fv(materialDiffuseLocation, 1, diffuse);
-		glUniform3fv(materialAmbientLocation, 1, ambient);
-		glUniform3fv(materialSpecularLocation, 1, specular);
-		glUniform1fv(materialShininessLocation, 1, &shininess);
+		glUniform3fv(materialDiffuseLocation, 1, material->diffuse);
+		glUniform3fv(materialAmbientLocation, 1, material->ambience);
+		glUniform3fv(materialSpecularLocation, 1, material->specular);
+		glUniform1fv(materialShininessLocation, 1, &material->shininess);
 
 		glBindVertexArray(vertexBuffers[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, arrayBuffers[0]);
 		glDrawArrays(GL_TRIANGLES, 0, nbrTriangles * 3);
+
+		delete material;
 	}
 
 	glFlush();
@@ -242,7 +229,7 @@ int main(int argCount, char *argValues[]) {
 	rotationAngle = -90.0f;
 	glutInit(&argCount, argValues);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(700, 700);
 	glutCreateWindow("Crowd Scene");
 
 	glutInitContextVersion(3, 1);
