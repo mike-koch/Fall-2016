@@ -21,9 +21,27 @@
     <ClCompile Include="keygen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="permutator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="keygen.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file_processor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="permutator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rounds.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mode.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

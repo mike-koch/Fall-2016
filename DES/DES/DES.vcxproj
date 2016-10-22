@@ -148,9 +148,15 @@
   <ItemGroup>
     <ClCompile Include="des.cpp" />
     <ClCompile Include="keygen.cpp" />
+    <ClCompile Include="permutator.cpp" />
+    <ClCompile Include="rounds.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="file_processor.h" />
     <ClInclude Include="keygen.h" />
+    <ClInclude Include="mode.h" />
+    <ClInclude Include="permutator.h" />
+    <ClInclude Include="rounds.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

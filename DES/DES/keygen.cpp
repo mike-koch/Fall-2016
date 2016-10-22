@@ -4,13 +4,13 @@
 const int NUMBER_OF_KEYS_TO_GENERATE = 16;
 
 // Function prototypes
-void compress_original_key(char *provided_key, uint64_t *compressed_key);
+void compress_original_key(uint64_t provided_key, uint64_t *compressed_key);
 void clear_key(uint64_t *key);
 void split_for_rotation(uint64_t *compressed_key, uint64_t *half, bool left_side);
 uint64_t rotate_left(uint64_t original, int number_of_bits_to_rotate);
 void compress_rotated_key(uint64_t *combined_key, uint64_t *compressed_key);
 
-void generate_keys(char *provided_key, uint64_t *keys)
+void generate_keys(uint64_t provided_key, uint64_t *keys)
 {
 	uint64_t compressed_key;
 	compress_original_key(provided_key, &compressed_key);
@@ -67,7 +67,7 @@ void generate_keys(char *provided_key, uint64_t *keys)
 	}
 }
 
-void compress_original_key(char *provided_key, uint64_t *compressed_key) {
+void compress_original_key(uint64_t provided_key, uint64_t *compressed_key) {
 	// 0 indicates to drop the bit
 	const int BIT_MAP[64] = {
 		8, 16, 24, 56, 52, 44, 36, 0, 7, 15, 23, 55, 51, 43, 35, 0,
@@ -75,14 +75,11 @@ void compress_original_key(char *provided_key, uint64_t *compressed_key) {
 		4, 12, 20, 28, 48, 40, 32, 0, 3, 11, 19, 27, 47, 39, 31, 0,
 		2, 10, 18, 26, 46, 38, 30, 0, 1, 9, 17, 25, 45, 37, 29, 0 };
 
-	//uint64_t provided_key_as_int = (uint64_t)provided_key;
-	uint64_t provided_key_as_int = 0x133457799BBCDFF1;
-
 	clear_key(compressed_key);
 
 	// Compression P-Box: 64 -> 56 bits
 	for (int i = 0; i < 64; i++) {
-		int bit_is_set = (provided_key_as_int >> (63 - i)) & 1;
+		int bit_is_set = (provided_key >> (63 - i)) & 1;
 
 		// If the bit map value is not 0, then we need to transpose it properly
 		if (BIT_MAP[i]) {

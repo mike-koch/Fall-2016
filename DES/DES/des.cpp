@@ -1,24 +1,46 @@
 #include "keygen.h"
+#include "file_processor.h"
+#include "permutator.h"
+#include "rounds.h"
 
 int main(int argc, char *argv)
 {
-	uint64_t keys[16];
-
-	generate_keys("PA$$W0RD", keys);
-
-	char c = 'a';
-
 	// 1. Process args
 
 	// 2. Generate keys
+	uint64_t keys[16];
 
-	// 3. Get next 64 bits (8 bytes)
+	generate_keys(0x133457799BBCDFF1, keys);
 
-	// 3a. Initial permutation
+	char c = 'a';
 
-	// 3b - 3q. Rounds 1 - 16
+	// Open the file for processing
+	char *input_file_path = "C:\\Shakespeare.txt";
+	char *output_file_path = "C:\\Shakespear.enc";
+	std::fstream input_stream;
+	std::fstream output_stream;
+	input_stream.open(input_file_path, std::ios::in | std::ios::binary);
+	output_stream.open(output_file_path, std::ios::out | std::ios::binary);
+	if (input_stream.is_open() && output_stream.is_open()) {
+		bool end_of_file_found = true;
+		while (end_of_file_found) {
+			// 3. Get next 64 bits (8 bytes)
+			uint64_t next_64_bits;
+			end_of_file_found = get_next_64_bits(input_stream, &next_64_bits);
 
-	// 3r. Final Permutation
 
-	// 4. Output
+			// 3a. Initial permutation
+			uint64_t initial_permutation;
+			apply_initial_permutation(&next_64_bits, &initial_permutation);
+
+			// 3b - 3q. Rounds 1 - 16
+			apply_rounds(&initial_permutation, output_stream, keys);
+			
+			// 3r. Final Permutation
+			uint64_t final_permutation;
+			apply_final_permutation(NULL, &final_permutation);
+
+			// 4. Output
+		}
+	}
 }
