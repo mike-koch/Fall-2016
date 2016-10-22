@@ -34,13 +34,15 @@ int main(int argc, char *argv)
 			apply_initial_permutation(&next_64_bits, &initial_permutation);
 
 			// 3b - 3q. Rounds 1 - 16
-			apply_rounds(&initial_permutation, output_stream, keys);
+			uint64_t round_output;
+			apply_rounds(&initial_permutation, &round_output, keys, Mode::ENCRYPTION);
 			
 			// 3r. Final Permutation
 			uint64_t final_permutation;
-			apply_final_permutation(NULL, &final_permutation);
+			apply_final_permutation(&round_output, &final_permutation);
 
 			// 4. Output
+			output_stream << final_permutation;
 		}
 	}
 }

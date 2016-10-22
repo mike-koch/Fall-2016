@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="des.cpp" />
+    <ClCompile Include="file_processor.cpp" />
     <ClCompile Include="keygen.cpp" />
     <ClCompile Include="permutator.cpp" />
     <ClCompile Include="rounds.cpp" />
