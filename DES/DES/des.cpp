@@ -12,8 +12,6 @@ int main(int argc, char *argv)
 
 	generate_keys(0x133457799BBCDFF1, keys);
 
-	char c = 'a';
-
 	// Open the file for processing
 	char *input_file_path = "C:\\Shakespeare.txt";
 	char *output_file_path = "C:\\Shakespear.enc";
@@ -21,12 +19,14 @@ int main(int argc, char *argv)
 	std::fstream output_stream;
 	input_stream.open(input_file_path, std::ios::in | std::ios::binary);
 	output_stream.open(output_file_path, std::ios::out | std::ios::binary);
-	if (input_stream.is_open() && output_stream.is_open()) {
-		bool end_of_file_found = true;
-		while (end_of_file_found) {
+	//if (input_stream.is_open() && output_stream.is_open()) {
+		bool end_of_file_found = false;
+		while (!end_of_file_found) {
+			end_of_file_found = true;
 			// 3. Get next 64 bits (8 bytes)
-			uint64_t next_64_bits;
-			end_of_file_found = get_next_64_bits(input_stream, &next_64_bits);
+			uint64_t next_64_bits = 0x123456789ABCDEF;
+			//end_of_file_found = get_next_64_bits(input_stream, &next_64_bits);
+
 
 
 			// 3a. Initial permutation
@@ -42,7 +42,7 @@ int main(int argc, char *argv)
 			apply_final_permutation(&round_output, &final_permutation);
 
 			// 4. Output
-			output_stream << final_permutation;
+			//output_stream << final_permutation;
 		}
-	}
+	//}
 }
