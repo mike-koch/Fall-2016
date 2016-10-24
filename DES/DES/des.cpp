@@ -14,11 +14,11 @@ int main(int argc, char *argv)
 
 	// Open the file for processing
 	char *input_file_path = "C:\\Shakespeare.txt";
-	char *output_file_path = "C:\\Shakespear.enc";
+	char *output_file_path = "C:\\Users\\Mike\\Desktop\\Shakespear.enc";
 	std::fstream input_stream;
 	std::fstream output_stream;
 	input_stream.open(input_file_path, std::ios::in | std::ios::binary);
-	output_stream.open(output_file_path, std::ios::out | std::ios::binary);
+	output_stream.open(output_file_path, std::ios::out | std::ios::binary | std::ios::trunc);
 	//if (input_stream.is_open() && output_stream.is_open()) {
 		bool end_of_file_found = false;
 		while (!end_of_file_found) {
@@ -42,7 +42,7 @@ int main(int argc, char *argv)
 			apply_final_permutation(&round_output, &final_permutation);
 
 			// 4. Output
-			//output_stream << final_permutation;
+			output_stream.write((char*)&final_permutation, sizeof(uint64_t));
 		}
 	//}
 }
