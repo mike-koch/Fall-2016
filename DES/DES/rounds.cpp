@@ -6,15 +6,18 @@ void apply_rounds(uint64_t *initial_permutation, uint64_t *output, uint64_t *key
 	uint32_t left_half = (*initial_permutation & 0xFFFFFFFF00000000) >> 32;
 	uint32_t right_half = *initial_permutation & 0x00000000FFFFFFFF;
 
-	int keyIndex = 0;
-	int keyIncrementer = 1;
+	int startIndex = 0;
+	int endIndex = 16;
+	int incrementer = 1;
 
 	if (mode == Mode::DECRYPTION) {
-		//-- TODO!
+		startIndex = 15;
+		endIndex = -1;
+		incrementer = -1;
 	}
 
 	// Rounds
-	for (int i = 0; i < 16; i++) {
+	for (int i = startIndex; i != endIndex; i += incrementer) {
 		uint64_t key = keys[i];
 		uint32_t original_right_half = right_half;
 

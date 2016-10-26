@@ -30,6 +30,9 @@
     <ClCompile Include="file_processor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="reverser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="keygen.h">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="mode.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="reverser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
