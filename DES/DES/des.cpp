@@ -3,6 +3,7 @@
 #include "permutator.h"
 #include "rounds.h"
 #include "reverser.h"
+#include "garbage_producer.h"
 
 // Function prototypes
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode);
@@ -52,8 +53,26 @@ int main(int argc, char *argv)
 		int decrypted_file_size;
 		do {
 			// 3. Get next 64 bits (8 bytes)
-			uint64_t next_64_bits;
+			uint64_t next_64_bits = 0;
+			int previous_number_of_bytes_read = number_of_bytes_read;
 			keep_going = get_next_64_bits(input_stream, &next_64_bits, &number_of_bytes_read, length_of_file);
+
+			// If we fall into this block, this means our last read was (1) our final possible read, and (2) we read less than 8 bytes. We need to pad the rest of the bytes with garbage.
+			// This will ONLY ever happen when encrypting. If we're decrypting and this if statement is true, very bad things have happened.
+			if (!keep_going && number_of_bytes_read - previous_number_of_bytes_read != 8) {
+				if (mode == Mode::DECRYPTION) {
+					printf("Hold up there! We shouldn't have a block that is not exactly 64 bits long. Stopping.");
+					exit(1);
+				}
+
+				uint64_t garbage;
+				generate_eight_bytes_of_garbage(&garbage);
+				int number_of_bytes_filled = number_of_bytes_read - previous_number_of_bytes_read;
+				
+				// Now that we know how many bytes need garbage, push the garbage data into those bytes by shifting them to the left.
+				//    *We haven't reversed yet, so the garbage will be the most significant byte(s)*
+				next_64_bits |= garbage << (8 * number_of_bytes_filled);
+			}
 
 			// The bytes read in are stored in reverse order. We need to flip them around first.
 			uint64_t reversed_next_64_bits;
@@ -72,7 +91,24 @@ int main(int argc, char *argv)
 				// Output to file
 				uint64_t reversed_output;
 				reverse(&output, &reversed_output);
-				output_stream.write((char*)&reversed_output, sizeof(uint64_t));
+
+				// We need to make sure that this isn't the last block during decryption. If we are on the last block, and there's garbage data, we must strip it out first.
+				int output_size = sizeof(uint64_t);
+				if (mode == Mode::DECRYPTION && decrypted_file_size < (number_of_bytes_read - 8)) {
+					int number_of_extra_bytes = (number_of_bytes_read - 8) - decrypted_file_size;
+
+					if (number_of_extra_bytes == 1) reversed_output &= ~(0xFF00000000000000);
+					if (number_of_extra_bytes == 2) reversed_output &= ~(0xFFFF000000000000);
+					if (number_of_extra_bytes == 3) reversed_output &= ~(0xFFFFFF0000000000);
+					if (number_of_extra_bytes == 4) reversed_output &= ~(0xFFFFFFFF00000000);
+					if (number_of_extra_bytes == 5) reversed_output &= ~(0xFFFFFFFFFF000000);
+					if (number_of_extra_bytes == 6) reversed_output &= ~(0xFFFFFFFFFFFF0000);
+					if (number_of_extra_bytes == 7) reversed_output &= ~(0xFFFFFFFFFFFFFF00);
+
+					output_size -= number_of_extra_bytes;
+				}
+
+				output_stream.write((char*)&reversed_output, output_size);
 			}
 		} while (keep_going);
 	}
