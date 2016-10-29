@@ -162,6 +162,7 @@
     <ClInclude Include="permutator.h" />
     <ClInclude Include="reverser.h" />
     <ClInclude Include="rounds.h" />
+    <ClInclude Include="sbox.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

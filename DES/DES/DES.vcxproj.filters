@@ -59,5 +59,8 @@
     <ClInclude Include="garbage_producer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="sbox.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
