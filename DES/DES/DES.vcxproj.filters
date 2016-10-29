@@ -36,6 +36,9 @@
     <ClCompile Include="garbage_producer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="error_handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="keygen.h">
@@ -60,6 +63,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sbox.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="error_handler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exit_code.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

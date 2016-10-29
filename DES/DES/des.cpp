@@ -4,11 +4,19 @@
 #include "rounds.h"
 #include "reverser.h"
 #include "garbage_producer.h"
+#include "error_handler.h"
+#include "exit_code.h"
 #include <string.h>
+
+// Constants
+const int ASCII_ZERO = 48;
+const int ASCII_NINE = 57;
+const int ASCII_A = 65;
+const int ASCII_F = 70;
 
 // Function prototypes
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode);
-void process_args(int argc, char *argv[]);
+void set_ascii_characters_to_key(char most_significant_char, char least_significant_char, int bit_offset, uint64_t *destination);
 
 int main(int argc, char *argv[])
 {
@@ -16,21 +24,30 @@ int main(int argc, char *argv[])
 	// The command-line syntax is: [-d|-e] [password] [mode] [input file path] [output file path], where -d is decryption and -e is encryption
 	// If we don't have 5 args (program name + actual args == argc), fail now
 	if (argc != 6) {
-		printf("Usage: ./des [-d|-e] [password] [mode] [input file path] [output file path]");
-		exit(1);
+		output_error("Usage: ./des [-d|-e] [password] [mode] [input file path] [output file path]", ExitCode::INVALID_ARG_SYNTAX);
 	}
 
+	// Make sure the user provided a valid encrypt/decrypt flag
 	Mode mode;
 	if (std::string(argv[1]) == "-e") {
 		mode = Mode::ENCRYPTION;
-	} else {
+	} else if (std::string(argv[1]) == "-d") {
 		mode = Mode::DECRYPTION;
+	} else {
+		output_error("Invalid encryption/decryption flag. Must choose either '-e' for encrypt or '-d' for decrypt", ExitCode::INVALID_ENCRYPT_DECRYPT_FLAG);
 	}
+
+	// Key parsing
 	char *raw_password = argv[2];
 	uint64_t password = 0;
 
 	// Parse the password to see if it's a hex value or a string literal
 	if (raw_password[0] == '\'') {
+		// The password is a string literal. Make sure the password is the proper length (8 chars + 2 single ticks = 10 chars). If it's not, fail.
+		if (strlen(raw_password) != 10) {
+			output_error("String passwords must be *exactly* eight characters surrounded by single tick marks ('). Exiting.", ExitCode::INVALID_PASSWORD);
+		}
+
 		// The password was entered in as a string. Set each byte to the password uint
 		password |= (uint64_t) raw_password[1] << 56;
 		password |= (uint64_t) raw_password[2] << 48;
@@ -42,39 +59,28 @@ int main(int argc, char *argv[])
 		password |= (uint64_t) raw_password[8];
 	} else {
 		// The password was entered as hex. We'll need to look at each character and convert it to its hex value
+		// Make sure we have 16 hex characters. If we don't, fail.
+		if (strlen(raw_password) != 16) {
+			output_error("Hex passwords must be *exactly* sixteen hex characters between 0-F. Exiting.", ExitCode::INVALID_PASSWORD);
+		}
+
+
 		// The hex characters provided are entered in order from MSB to LSB
-		int left_hand_side = raw_password[0] - '0';
-		int right_hand_side = raw_password[1] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 56;
-		left_hand_side = raw_password[2] - '0';
-		right_hand_side = raw_password[3] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 48;
-		left_hand_side = raw_password[4] - '0';
-		right_hand_side = raw_password[5] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 40;
-		left_hand_side = raw_password[6] - '0';
-		right_hand_side = raw_password[7] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 32;
-		left_hand_side = raw_password[8] - '0';
-		right_hand_side = raw_password[9] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 24;
-		left_hand_side = raw_password[10] - '0';
-		right_hand_side = raw_password[11] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 16;
-		left_hand_side = raw_password[12] - '0';
-		right_hand_side = raw_password[13] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 8;
-		left_hand_side = raw_password[14] - '0';
-		right_hand_side = raw_password[15] - '0';
-		password |= (uint64_t)((left_hand_side * 16) + right_hand_side);
+		set_ascii_characters_to_key(raw_password[0], raw_password[1], 56, &password);
+		set_ascii_characters_to_key(raw_password[2], raw_password[3], 48, &password);
+		set_ascii_characters_to_key(raw_password[4], raw_password[5], 40, &password);
+		set_ascii_characters_to_key(raw_password[6], raw_password[7], 32, &password);
+		set_ascii_characters_to_key(raw_password[8], raw_password[9], 24, &password);
+		set_ascii_characters_to_key(raw_password[10], raw_password[11], 16, &password);
+		set_ascii_characters_to_key(raw_password[12], raw_password[13], 8, &password);
+		set_ascii_characters_to_key(raw_password[14], raw_password[15], 0, &password);
 	}
 
 	// This implementation only supports ECB. If anything else is provided, fail now
 	if ((argv[3][0] != 'E' && argv[3][0] != 'e')
 		|| (argv[3][1] != 'C' && argv[3][1] != 'c')
 		|| (argv[3][2] != 'B' && argv[3][2] != 'b')) {
-		printf("Only ECB is supported!");
-		exit(1);
+		output_error("Only ECB is supported!", ExitCode::INVALID_MODE);
 	}
 
 	char *input_file_path = argv[4];
@@ -177,6 +183,9 @@ int main(int argc, char *argv[])
 			}
 		} while (keep_going);
 	}
+	else {
+		output_error("ERROR: Unable to open file. Make sure that both the input file and output file are accessible!", ExitCode::CANNOT_OPEN_FILE);
+	}
 }
 
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode) {
@@ -192,6 +201,15 @@ void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mod
 	apply_final_permutation(&round_output, output);
 }
 
-void process_args(int argc, char *argv[]) {
+void set_ascii_characters_to_key(char most_significant_char, char least_significant_char, int bit_offset, uint64_t *destination) {
+	int left_hand_side = most_significant_char - '0';
+	int right_hand_side = least_significant_char - '0';
 
+	// Make sure the user entered a valid hex digit
+	if ((left_hand_side < (ASCII_ZERO - 48) || (left_hand_side > (ASCII_NINE - 48) && left_hand_side < (ASCII_A - 48)) || left_hand_side > (ASCII_F - 48)) ||
+		(right_hand_side < (ASCII_ZERO - 48) || (right_hand_side > (ASCII_NINE - 48) && right_hand_side < (ASCII_A - 48)) || right_hand_side >(ASCII_F - 48))) {
+		output_error("One or more characters are not valid hex characters", ExitCode::INVALID_PASSWORD);
+	}
+
+	*destination |= (uint64_t)((left_hand_side * 16) + right_hand_side) << bit_offset;
 }

@@ -111,7 +111,8 @@
       <AssemblerOutput>All</AssemblerOutput>
       <AdditionalOptions>/favor:INTEL64 %(AdditionalOptions)</AdditionalOptions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="des.cpp" />
+    <ClCompile Include="error_handler.cpp" />
     <ClCompile Include="file_processor.cpp" />
     <ClCompile Include="garbage_producer.cpp" />
     <ClCompile Include="keygen.cpp" />
@@ -164,6 +166,8 @@
     <ClCompile Include="rounds.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="error_handler.h" />
+    <ClInclude Include="exit_code.h" />
     <ClInclude Include="file_processor.h" />
     <ClInclude Include="garbage_producer.h" />
     <ClInclude Include="keygen.h" />
