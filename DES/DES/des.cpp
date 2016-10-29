@@ -4,22 +4,87 @@
 #include "rounds.h"
 #include "reverser.h"
 #include "garbage_producer.h"
+#include <string.h>
 
 // Function prototypes
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode);
+void process_args(int argc, char *argv[]);
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
 	// 1. Process args
-	Mode mode = Mode::DECRYPTION;
+	// The command-line syntax is: [-d|-e] [password] [mode] [input file path] [output file path], where -d is decryption and -e is encryption
+	// If we don't have 5 args (program name + actual args == argc), fail now
+	if (argc != 6) {
+		printf("Usage: ./des [-d|-e] [password] [mode] [input file path] [output file path]");
+		exit(1);
+	}
+
+	Mode mode;
+	if (std::string(argv[1]) == "-e") {
+		mode = Mode::ENCRYPTION;
+	} else {
+		mode = Mode::DECRYPTION;
+	}
+	char *raw_password = argv[2];
+	uint64_t password = 0;
+
+	// Parse the password to see if it's a hex value or a string literal
+	if (raw_password[0] == '\'') {
+		// The password was entered in as a string. Set each byte to the password uint
+		password |= (uint64_t) raw_password[1] << 56;
+		password |= (uint64_t) raw_password[2] << 48;
+		password |= (uint64_t) raw_password[3] << 40;
+		password |= (uint64_t) raw_password[4] << 32;
+		password |= (uint64_t) raw_password[5] << 24;
+		password |= (uint64_t) raw_password[6] << 16;
+		password |= (uint64_t) raw_password[7] << 8;
+		password |= (uint64_t) raw_password[8];
+	} else {
+		// The password was entered as hex. We'll need to look at each character and convert it to its hex value
+		// The hex characters provided are entered in order from MSB to LSB
+		int left_hand_side = raw_password[0] - '0';
+		int right_hand_side = raw_password[1] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 56;
+		left_hand_side = raw_password[2] - '0';
+		right_hand_side = raw_password[3] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 48;
+		left_hand_side = raw_password[4] - '0';
+		right_hand_side = raw_password[5] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 40;
+		left_hand_side = raw_password[6] - '0';
+		right_hand_side = raw_password[7] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 32;
+		left_hand_side = raw_password[8] - '0';
+		right_hand_side = raw_password[9] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 24;
+		left_hand_side = raw_password[10] - '0';
+		right_hand_side = raw_password[11] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 16;
+		left_hand_side = raw_password[12] - '0';
+		right_hand_side = raw_password[13] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side) << 8;
+		left_hand_side = raw_password[14] - '0';
+		right_hand_side = raw_password[15] - '0';
+		password |= (uint64_t)((left_hand_side * 16) + right_hand_side);
+	}
+
+	// This implementation only supports ECB. If anything else is provided, fail now
+	if ((argv[3][0] != 'E' && argv[3][0] != 'e')
+		|| (argv[3][1] != 'C' && argv[3][1] != 'c')
+		|| (argv[3][2] != 'B' && argv[3][2] != 'b')) {
+		printf("Only ECB is supported!");
+		exit(1);
+	}
+
+	char *input_file_path = argv[4];
+	char *output_file_path = argv[5];
 
 	// 2. Generate keys
 	uint64_t keys[16];
-	generate_keys(0x133457799BBCDFF1, keys);
+	generate_keys(password, keys);
 
 	// Open the file for processing
-	char *input_file_path = "C:\\Users\\Mike\\Desktop\\DES\\encrypted.enc";
-	char *output_file_path = "C:\\Users\\Mike\\Desktop\\DES\\decrypted.dec";
 	std::fstream input_stream;
 	std::fstream output_stream;
 	input_stream.open(input_file_path, std::ios::in | std::ios::binary);
@@ -125,4 +190,8 @@ void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mod
 
 	// 3r. Final Permutation
 	apply_final_permutation(&round_output, output);
+}
+
+void process_args(int argc, char *argv[]) {
+
 }
