@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 	char *raw_password = argv[2];
 	uint64_t password = 0;
 
-	// Parse the password to see if it's a hex value or a string literal
+	// Parse the password to see if it's a hex value or a string literal. If the key starts with ', it's a string literal
 	if (raw_password[0] == '\'') {
 		// The password is a string literal. Make sure the password is the proper length (8 chars + 2 single ticks = 10 chars). If it's not, fail.
 		if (strlen(raw_password) != 10) {
@@ -77,9 +77,9 @@ int main(int argc, char *argv[])
 	}
 
 	// This implementation only supports ECB. If anything else is provided, fail now
-	if ((argv[3][0] != 'E' && argv[3][0] != 'e')
-		|| (argv[3][1] != 'C' && argv[3][1] != 'c')
-		|| (argv[3][2] != 'B' && argv[3][2] != 'b')) {
+	if (tolower(argv[3][0]) != 'e'
+		|| tolower(argv[3][1]) != 'c'
+		|| tolower(argv[3][2] != 'b')) {
 		output_error("Only ECB is supported!", ExitCode::INVALID_MODE);
 	}
 
@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
 	std::fstream output_stream;
 	input_stream.open(input_file_path, std::ios::in | std::ios::binary);
 
+	// Get the length of the file by going to the end ofthe input stream and checking where the stream index is at. Then go back
+	// to the beginning so we can actually read the data
 	input_stream.seekg(0, input_stream.end);
 	int length_of_file = input_stream.tellg();
 	input_stream.seekg(0, input_stream.beg);
@@ -109,6 +111,7 @@ int main(int argc, char *argv[])
 			uint64_t output = 0;
 			process_chunk(&file_size_block, keys, &output, mode);
 			
+			// Reverse the output so the bytes are saved from MSB to LSB
 			uint64_t reversed_output;
 			reverse(&output, &reversed_output);
 			
@@ -182,22 +185,21 @@ int main(int argc, char *argv[])
 				output_stream.write((char*)&reversed_output, output_size);
 			}
 		} while (keep_going);
-	}
-	else {
+	} else {
 		output_error("ERROR: Unable to open file. Make sure that both the input file and output file are accessible!", ExitCode::CANNOT_OPEN_FILE);
 	}
 }
 
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode) {
-	// 3a. Initial permutation
+	// Initial permutation
 	uint64_t initial_permutation;
 	apply_initial_permutation(next_64_bits, &initial_permutation);
 
-	// 3b - 3q. Rounds 1 - 16
+	// Rounds 1 - 16
 	uint64_t round_output;
 	apply_rounds(&initial_permutation, &round_output, keys, mode);
 
-	// 3r. Final Permutation
+	// Final Permutation
 	apply_final_permutation(&round_output, output);
 }
 
