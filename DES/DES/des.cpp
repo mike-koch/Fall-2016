@@ -7,12 +7,15 @@
 #include "error_handler.h"
 #include "exit_code.h"
 #include <string.h>
+#include <time.h>
+#include <iostream>
 
 // Constants
 const int ASCII_ZERO = 48;
 const int ASCII_NINE = 57;
 const int ASCII_A = 65;
 const int ASCII_F = 70;
+const double NUMBER_OF_MILLISECONDS_IN_SECOND = 1000.0;
 
 // Function prototypes
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode);
@@ -21,22 +24,22 @@ void set_ascii_characters_to_key(char most_significant_char, char least_signific
 int main(int argc, char *argv[])
 {
 	// 1. Process args
-	// The command-line syntax is: [-d|-e] [password] [mode] [input file path] [output file path], where -d is decryption and -e is encryption
+	// The command-line syntax is: [-[d|D]|-[e|E]] [password] [ECB|ecb] [input file path] [output file path], where -d is decryption and -e is encryption
 	// If we don't have 5 args (program name + actual args == argc), fail now
 	if (argc != 6) {
-		output_error("Usage: ./des [-d|-e] [password] [mode] [input file path] [output file path]", ExitCode::INVALID_ARG_SYNTAX);
+		output_error("Usage: ./des [-[d|D]|-[e|E]] [password] [ECB|ecb] [input file path] [output file path], where -d or -D is decryption and -e or -E is encryption", ExitCode::INVALID_ARG_SYNTAX);
 	}
 
 	// Make sure the user provided a valid encrypt/decrypt flag
 	Mode mode;
-	if (std::string(argv[1]) == "-e") {
+	if (std::string(argv[1]) == "-e" || std::string(argv[1]) == "-E") {
 		mode = Mode::ENCRYPTION;
 	}
-	else if (std::string(argv[1]) == "-d") {
+	else if (std::string(argv[1]) == "-d" || std::string(argv[1]) == "-D") {
 		mode = Mode::DECRYPTION;
 	}
 	else {
-		output_error("Invalid encryption/decryption flag. Must choose either '-e' for encrypt or '-d' for decrypt", ExitCode::INVALID_ENCRYPT_DECRYPT_FLAG);
+		output_error("Invalid encryption/decryption flag. Must choose either '-e'/'-E' for encrypt or '-d'/'-D' for decrypt", ExitCode::INVALID_ENCRYPT_DECRYPT_FLAG);
 	}
 
 	// Key parsing
@@ -47,7 +50,7 @@ int main(int argc, char *argv[])
 	if (raw_password[0] == '\'') {
 		// The password is a string literal. Make sure the password is the proper length (8 chars + 2 single ticks = 10 chars). If it's not, fail.
 		if (strlen(raw_password) != 10) {
-			output_error("String passwords must be *exactly* eight characters surrounded by single tick marks ('). Exiting.", ExitCode::INVALID_PASSWORD);
+			output_error("String passwords must be *exactly* eight characters surrounded by single tick marks ('). If your key includes spaces, wrap the entire string in double-quotes (\"). Exiting.", ExitCode::INVALID_PASSWORD);
 		}
 
 		// The password was entered in as a string. Set each byte to the password uint
@@ -80,16 +83,20 @@ int main(int argc, char *argv[])
 	}
 
 	// This implementation only supports ECB. If anything else is provided, fail now
-	if (tolower(argv[3][0]) != 'e'
-		|| tolower(argv[3][1]) != 'c'
-		|| tolower(argv[3][2] != 'b')) {
+	if ((argv[3][0] != 'e' && argv[3][0] != 'E')
+		|| (argv[3][1] != 'c' && argv[3][1] != 'C')
+		|| (argv[3][2] != 'b' && argv[3][2] != 'B')) {
 		output_error("Only ECB is supported!", ExitCode::INVALID_MODE);
 	}
 
 	char *input_file_path = argv[4];
 	char *output_file_path = argv[5];
 
+	printf("Starting the %s process. Please wait.\r", mode == Mode::ENCRYPTION ? "encryption" : "decryption");
+
 	// 2. Generate keys
+	// Start a timer here so we can see how long the process takes.
+	clock_t startTime = clock();
 	uint64_t keys[16];
 	generate_keys(password, keys);
 
@@ -193,6 +200,11 @@ int main(int argc, char *argv[])
 	else {
 		output_error("ERROR: Unable to open file. Make sure that both the input file and output file are accessible!", ExitCode::CANNOT_OPEN_FILE);
 	}
+
+	// Everything is done. Get the end time and output how long the process took.
+	clock_t endTime = clock();
+	printf("Process completed in %.4f seconds. Press ENTER to exit.", (endTime - startTime)/ NUMBER_OF_MILLISECONDS_IN_SECOND);
+	std::cin.get();
 }
 
 void process_chunk(uint64_t *next_64_bits, uint64_t *keys, uint64_t *output, Mode mode) {
