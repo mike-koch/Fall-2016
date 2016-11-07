@@ -11,23 +11,27 @@ void apply_rounds(uint64_t *initial_permutation, uint64_t *output, uint64_t *key
 	int endIndex = 16;
 	int incrementer = 1;
 
+	if (mode == Mode::DECRYPTION) {
+		// If we're decrypting, we should start at the last key and loop until we get to the first key
+		startIndex = 15;
+		endIndex = -1;
+		incrementer = -1;
+	}
+
 	// Rounds
 	for (int i = startIndex; i != endIndex; i += incrementer) {
 		uint64_t key = keys[i];
 		uint32_t original_right_half = right_half;
 
 		// Apply the initial permutation (the expansion permutation)
-		uint64_t expanded_right_half = right_half;
+		uint64_t expanded_right_half;
 		apply_expansion_permutation(&right_half, &expanded_right_half);
 
 		// XOR the result of the expansion permutation with the current key
-		// Uncomment to actually apply the key
-		//uint64_t right_and_key = key ^ expanded_right_half;
-		uint64_t right_and_key = expanded_right_half;
+		uint64_t right_and_key = key ^ expanded_right_half;
 
 		// Splitting the result of the XOR operation into eight sets of 6.
-		// Uncomment the giant block below to actually perform S-Box calculations
-		uint8_t six_bit_one = (uint8_t) ((right_and_key & 0xFC00000000000000) >> 56);
+		uint8_t six_bit_one = (uint8_t)((right_and_key & 0xFC00000000000000) >> 56);
 		uint8_t six_bit_two = (uint8_t)((right_and_key & 0x03F0000000000000) >> 50);
 		uint8_t six_bit_three = (uint8_t)((right_and_key & 0x000FC00000000000) >> 44);
 		uint8_t six_bit_four = (uint8_t)((right_and_key & 0x00003F0000000000) >> 38);
@@ -37,9 +41,9 @@ void apply_rounds(uint64_t *initial_permutation, uint64_t *output, uint64_t *key
 		uint8_t six_bit_eight = (uint8_t)((right_and_key & 0x00000000003F0000) >> 14);
 
 		/* The code below is repetitive, and here's what it does:
-		   1) Get the current row by checking the value of the first and 6th bit
-		   2) Get the value of bits 2 through 5, and add them accordingly to get a decimal value
-		   3) Consult the correct S_BOX 2D array to get the value of the row and column.
+		1) Get the current row by checking the value of the first and 6th bit
+		2) Get the value of bits 2 through 5, and add them accordingly to get a decimal value
+		3) Consult the correct S_BOX 2D array to get the value of the row and column.
 		*/
 		// Six bit one, S-Box 1
 		int row_number = 0;
@@ -191,11 +195,11 @@ void apply_rounds(uint64_t *initial_permutation, uint64_t *output, uint64_t *key
 
 
 		// XOR the straight_p_box_result with the left half
-		//right_half = left_half ^ straight_p_box_result;
+		right_half = left_half ^ straight_p_box_result;
 
 		left_half = original_right_half;
 	}
 
 	// Since we're done, combine the left and right halves to make our output
-	*output = (uint64_t) right_half << 32 | left_half;
+	*output = (uint64_t)right_half << 32 | left_half;
 }
