@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+error_handler.cpp: Handles outputting errors to the console (displaying the provided text) and exiting with the provided exit code
+*/
 #include "error_handler.h"
 #include <stdio.h>
 #include <iostream>

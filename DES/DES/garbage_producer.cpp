@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+garbage_producer.cpp: Generates 64 random bits to be used by other functions
+*/
 #include "garbage_producer.h"
 #include <stdlib.h>
 

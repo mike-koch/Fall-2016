@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+exit_code.h: An enum indicating the type of error that occurred, along with its exit code.
+*/
 #ifndef EXIT_CODE_H
 #define EXIT_CODE_H
 

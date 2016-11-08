@@ -1,3 +1,9 @@
+/*
+ Mike Koch
+ EECS 4760 - Computer Security
+ DES
+ des.cpp: Main entry point. Handles argument processing and the overall encryption / decryption process.
+*/
 #include "keygen.h"
 #include "file_processor.h"
 #include "permutator.h"

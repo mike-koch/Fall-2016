@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+rounds.h: Consult rounds.cpp
+*/
 #ifndef ROUNDS_H
 #define ROUNDS_H
 #include <fstream>

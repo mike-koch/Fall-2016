@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+permutator.h: Consult permutator.cpp
+*/
 #ifndef PERMUTATOR_H
 #define PERMUTATOR_H
 #include <stdint.h>

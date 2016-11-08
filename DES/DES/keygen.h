@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+keygen.h: Consult keygen.cpp
+*/
 #ifndef KEYGEN_H
 #define KEYGEN_H
 #include <stdint.h>

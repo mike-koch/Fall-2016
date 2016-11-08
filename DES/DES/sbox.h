@@ -1,3 +1,10 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+s_box.h: The 8 s-boxes used during the Feistel rounds. Using a 2D array is cleaner than a bunch of if-else blocks, and may actually be a little bit faster (two memory accesses instead of several
+         CMPs and jumps)
+*/
 #ifndef SBOX_H
 #define SBOX_H
 

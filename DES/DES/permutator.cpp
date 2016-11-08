@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+permutator.cpp: Handles the initial, expansion, and final permutations. Stores the result in the "destination"
+*/
 #include "permutator.h"
 #include <stdio.h>
 
@@ -15,6 +21,7 @@ void apply_initial_permutation(uint64_t *source, uint64_t *destination) {
 	                63 55 47 39 31 23 15 07
 	*/
 	*destination = 0;
+	// Using these quick and dirty if statements to only set the bits that are "on" from the source. Faster than using a loop and a look-up table.
 	if (*source & (INT64_C(1) << (64 - 58))) *destination |= (INT64_C(1) << (64 - 1));
 	if (*source & (INT64_C(1) << (64 - 50))) *destination |= (INT64_C(1) << (64 - 2));
 	if (*source & (INT64_C(1) << (64 - 42))) *destination |= (INT64_C(1) << (64 - 3));

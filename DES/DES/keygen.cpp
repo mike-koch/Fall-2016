@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+keygen.cpp: Generates the 16 keys needed for each Feistel round, based on the key provided. Handles the compression permutations and rotations
+*/
 #include "keygen.h"
 #include <stdio.h>
 

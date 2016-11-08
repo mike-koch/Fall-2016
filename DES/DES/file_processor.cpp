@@ -1,3 +1,10 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+file_processor.cpp: Handles safely retrieving the next 64 bits (or less if less than 64 bits exist) of a file using the provided file stream, number of bytes read, and the size of the file.
+                    Also handles building the file size block to be stored in the encrypted file.
+*/
 #include "file_processor.h"
 #include "garbage_producer.h"
 

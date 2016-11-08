@@ -1,3 +1,9 @@
+/*
+Mike Koch
+EECS 4760 - Computer Security
+DES
+rounds.cpp: Handles executing the 16 Feistel rounds, given the result of the initial permutation and the keys. Stores the result in "output" (provided).
+*/
 #include "rounds.h"
 #include "permutator.h"
 #include "sbox.h"
