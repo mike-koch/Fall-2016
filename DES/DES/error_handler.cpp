@@ -12,6 +12,7 @@ error_handler.cpp: Handles outputting errors to the console (displaying the prov
 // Then the application exits with the provided exit_code.
 void output_error(char *text, int exit_code) {
 	printf("ERROR: %s", text);
+	printf("\nUsage: ./des [-[d|D]|-[e|E]] [password] [ECB|ecb] [input file path] [output file path], where -d or -D is decryption and -e or -E is encryption");
 	printf("\n\nPress ENTER to exit.");
 
 	std::cin.get();

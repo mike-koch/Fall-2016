@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// The command-line syntax is: [-[d|D]|-[e|E]] [password] [ECB|ecb] [input file path] [output file path], where -d is decryption and -e is encryption
 	// If we don't have 5 args (program name + actual args == argc), fail now
 	if (argc != 6) {
-		output_error("Usage: ./des [-[d|D]|-[e|E]] [password] [ECB|ecb] [input file path] [output file path], where -d or -D is decryption and -e or -E is encryption", ExitCode::INVALID_ARG_SYNTAX);
+		output_error("", ExitCode::INVALID_ARG_SYNTAX);
 	}
 
 	// Make sure the user provided a valid encrypt/decrypt flag
