@@ -112,94 +112,93 @@ int main(int argc, char *argv[])
 	input_stream.seekg(0, input_stream.beg);
 
 	output_stream.open(output_file_path, std::ios::out | std::ios::binary | std::ios::trunc);
-	if (input_stream.is_open() && output_stream.is_open()) {
-		// If we're encrypting, encrypt the file size.
-		if (mode == Mode::ENCRYPTION) {
-			uint64_t file_size_block;
-			build_file_size_block(length_of_file, &file_size_block);
+	if (!input_stream.is_open() || !output_stream.is_open()) {
+		output_error("ERROR: Unable to open file. Make sure that both the input file and output file are accessible!", ExitCode::CANNOT_OPEN_FILE);
+	}
 
-			uint64_t output = 0;
-			process_chunk(&file_size_block, keys, &output, mode);
+	// If we're encrypting, encrypt the file size.
+	if (mode == Mode::ENCRYPTION) {
+		uint64_t file_size_block;
+		build_file_size_block(length_of_file, &file_size_block);
 
-			// Reverse the output so the bytes are saved from MSB to LSB
+		uint64_t output = 0;
+		process_chunk(&file_size_block, keys, &output, mode);
+
+		// Reverse the output so the bytes are saved from MSB to LSB
+		uint64_t reversed_output;
+		reverse(&output, &reversed_output);
+
+		output_stream.write((char*)&reversed_output, sizeof(uint64_t));
+	}
+
+	// Flag to indicate if we've reached the end of the input file.
+	bool keep_going = false;
+	int number_of_bytes_read = 0;
+
+	// These two ints are used only for decryption. We only strip half of the first chunk during decryption, so we need to know when the first run is. We also need to know the file size.
+	int first_iteration = true;
+	int decrypted_file_size;
+	do {
+		// 3. Get next 64 bits (8 bytes)
+		uint64_t next_64_bits = 0;
+		int previous_number_of_bytes_read = number_of_bytes_read;
+		keep_going = get_next_64_bits(input_stream, &next_64_bits, &number_of_bytes_read, length_of_file);
+
+		// If we fall into this block, this means our last read was (1) our final possible read, and (2) we read less than 8 bytes. We need to pad the rest of the bytes with garbage.
+		// This will ONLY ever happen when encrypting. If we're decrypting and this if statement is true, very bad things have happened.
+		if (!keep_going && number_of_bytes_read - previous_number_of_bytes_read != 8) {
+			if (mode == Mode::DECRYPTION) {
+				printf("Hold up there! We shouldn't have a block that is not exactly 64 bits long. Stopping.");
+				exit(1);
+			}
+
+			uint64_t garbage;
+			generate_eight_bytes_of_garbage(&garbage);
+			int number_of_bytes_filled = number_of_bytes_read - previous_number_of_bytes_read;
+
+			// Now that we know how many bytes need garbage, push the garbage data into those bytes by shifting them to the left.
+			//    *We haven't reversed yet, so the garbage will be the most significant byte(s)*
+			next_64_bits |= garbage << (8 * number_of_bytes_filled);
+		}
+
+		// The bytes read in are stored in reverse order. We need to flip them around first.
+		uint64_t reversed_next_64_bits;
+		reverse(&next_64_bits, &reversed_next_64_bits);
+
+		uint64_t output = 0;
+		process_chunk(&reversed_next_64_bits, keys, &output, mode);
+
+		if (first_iteration && mode == Mode::DECRYPTION) {
+			// The first chunk tells us how long the file is. We'll store this in decrypted_file_size so we know if we need to throw away any garbage bits.
+			// ANDing the output with the below hex value to only retrieve the least-significant word; our file length
+			decrypted_file_size = output & 0x00000000FFFFFFFF;
+
+			first_iteration = false;
+		}
+		else {
+			// Output to file
 			uint64_t reversed_output;
 			reverse(&output, &reversed_output);
 
-			output_stream.write((char*)&reversed_output, sizeof(uint64_t));
+			// We need to make sure that this isn't the last block during decryption. If we are on the last block, and there's garbage data, we must strip it out first.
+			int output_size = sizeof(uint64_t);
+			if (mode == Mode::DECRYPTION && decrypted_file_size < (number_of_bytes_read - 8)) {
+				int number_of_extra_bytes = (number_of_bytes_read - 8) - decrypted_file_size;
+
+				if (number_of_extra_bytes == 1) reversed_output &= ~(0xFF00000000000000);
+				if (number_of_extra_bytes == 2) reversed_output &= ~(0xFFFF000000000000);
+				if (number_of_extra_bytes == 3) reversed_output &= ~(0xFFFFFF0000000000);
+				if (number_of_extra_bytes == 4) reversed_output &= ~(0xFFFFFFFF00000000);
+				if (number_of_extra_bytes == 5) reversed_output &= ~(0xFFFFFFFFFF000000);
+				if (number_of_extra_bytes == 6) reversed_output &= ~(0xFFFFFFFFFFFF0000);
+				if (number_of_extra_bytes == 7) reversed_output &= ~(0xFFFFFFFFFFFFFF00);
+
+				output_size -= number_of_extra_bytes;
+			}
+
+			output_stream.write((char*)&reversed_output, output_size);
 		}
-
-		// Flag to indicate if we've reached the end of the input file.
-		bool keep_going = false;
-		int number_of_bytes_read = 0;
-
-		// These two ints are used only for decryption. We only strip half of the first chunk during decryption, so we need to know when the first run is. We also need to know the file size.
-		int first_iteration = true;
-		int decrypted_file_size;
-		do {
-			// 3. Get next 64 bits (8 bytes)
-			uint64_t next_64_bits = 0;
-			int previous_number_of_bytes_read = number_of_bytes_read;
-			keep_going = get_next_64_bits(input_stream, &next_64_bits, &number_of_bytes_read, length_of_file);
-
-			// If we fall into this block, this means our last read was (1) our final possible read, and (2) we read less than 8 bytes. We need to pad the rest of the bytes with garbage.
-			// This will ONLY ever happen when encrypting. If we're decrypting and this if statement is true, very bad things have happened.
-			if (!keep_going && number_of_bytes_read - previous_number_of_bytes_read != 8) {
-				if (mode == Mode::DECRYPTION) {
-					printf("Hold up there! We shouldn't have a block that is not exactly 64 bits long. Stopping.");
-					exit(1);
-				}
-
-				uint64_t garbage;
-				generate_eight_bytes_of_garbage(&garbage);
-				int number_of_bytes_filled = number_of_bytes_read - previous_number_of_bytes_read;
-
-				// Now that we know how many bytes need garbage, push the garbage data into those bytes by shifting them to the left.
-				//    *We haven't reversed yet, so the garbage will be the most significant byte(s)*
-				next_64_bits |= garbage << (8 * number_of_bytes_filled);
-			}
-
-			// The bytes read in are stored in reverse order. We need to flip them around first.
-			uint64_t reversed_next_64_bits;
-			reverse(&next_64_bits, &reversed_next_64_bits);
-
-			uint64_t output = 0;
-			process_chunk(&reversed_next_64_bits, keys, &output, mode);
-
-			if (first_iteration && mode == Mode::DECRYPTION) {
-				// The first chunk tells us how long the file is. We'll store this in decrypted_file_size so we know if we need to throw away any garbage bits.
-				// ANDing the output with the below hex value to only retrieve the least-significant word; our file length
-				decrypted_file_size = output & 0x00000000FFFFFFFF;
-
-				first_iteration = false;
-			}
-			else {
-				// Output to file
-				uint64_t reversed_output;
-				reverse(&output, &reversed_output);
-
-				// We need to make sure that this isn't the last block during decryption. If we are on the last block, and there's garbage data, we must strip it out first.
-				int output_size = sizeof(uint64_t);
-				if (mode == Mode::DECRYPTION && decrypted_file_size < (number_of_bytes_read - 8)) {
-					int number_of_extra_bytes = (number_of_bytes_read - 8) - decrypted_file_size;
-
-					if (number_of_extra_bytes == 1) reversed_output &= ~(0xFF00000000000000);
-					if (number_of_extra_bytes == 2) reversed_output &= ~(0xFFFF000000000000);
-					if (number_of_extra_bytes == 3) reversed_output &= ~(0xFFFFFF0000000000);
-					if (number_of_extra_bytes == 4) reversed_output &= ~(0xFFFFFFFF00000000);
-					if (number_of_extra_bytes == 5) reversed_output &= ~(0xFFFFFFFFFF000000);
-					if (number_of_extra_bytes == 6) reversed_output &= ~(0xFFFFFFFFFFFF0000);
-					if (number_of_extra_bytes == 7) reversed_output &= ~(0xFFFFFFFFFFFFFF00);
-
-					output_size -= number_of_extra_bytes;
-				}
-
-				output_stream.write((char*)&reversed_output, output_size);
-			}
-		} while (keep_going);
-	}
-	else {
-		output_error("ERROR: Unable to open file. Make sure that both the input file and output file are accessible!", ExitCode::CANNOT_OPEN_FILE);
-	}
+	} while (keep_going);
 
 	// Everything is done. Get the end time and output how long the process took.
 	clock_t endTime = clock();
