@@ -31,7 +31,9 @@ GLuint vertexBuffers[10], arrayBuffers[10], elementBuffers[10];
 float rotationAngle;
 int nbrTriangles;
 GLint light0OnLocation, light1OnLocation, light2OnLocation;
-int light0On, light1On, light2On;
+bool light0On = true;
+bool light1On = true;
+bool light2On = true; // The vertex shader initializes all of these to true initially
 
 map<string, GLuint> locationMap;
 
@@ -324,17 +326,17 @@ void keypress(unsigned char key, int x, int y) {
 		exit(0);
 		break;
 	case '0':
-		light0On = (light0On + 1) % 2;
+		light0On = !light0On;
 		glUniform1i(locationMap["light0On"], light0On);
 		glutPostRedisplay();
 		break;
 	case '1':
-		light1On = (light1On + 1) % 2;
+		light1On = !light1On;
 		glUniform1i(locationMap["light1On"], light1On);
 		glutPostRedisplay();
 		break;
 	case '2':
-		light2On = (light2On + 1) % 2;
+		light2On = !light2On;
 		glUniform1i(locationMap["light2On"], light2On);
 		glutPostRedisplay();
 		break;
